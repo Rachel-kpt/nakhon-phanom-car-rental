@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แอดมิน - ระบบจองเช่ารถ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Sarabun', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --primary: #3b82f6;
+    }
+    body { font-family: 'Sarabun', sans-serif; }
+    .btn-primary { background-color: var(--primary); }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .tab-active { border-bottom: 2px solid var(--primary); color: var(--primary); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
+      <h1 class="text-2xl font-bold text-center mb-6">เข้าสู่ระบบแอดมิน</h1>
+      <form onsubmit="login(event)">
+        <input type="password" id="admin-password" placeholder="รหัสผ่าน" required
+          class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+        <button type="submit" class="w-full btn-primary text-white py-3 rounded-lg font-medium">เข้าสู่ระบบ</button>
+      </form>
+      <p class="text-xs text-gray-400 text-center mt-4">รหัสเริ่มต้น: admin123</p>
+      <a href="index.html" class="block text-center text-sm text-blue-500 mt-4 hover:underline">← กลับหน้าหลัก</a>
+    </div>
+  </div>
+
+  <div id="admin-app" class="hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">⚙️</span>
+          <h1 class="text-xl font-bold">ระบบจัดการหลังบ้าน</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="index.html" target="_blank" class="text-sm text-blue-500 hover:underline">ดูหน้าเว็บ</a>
+          <button onclick="logout()" class="text-sm text-red-500 hover:underline">ออกจากระบบ</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="bg-white border-b">
+      <div class="max-w-7xl mx-auto px-4 flex gap-6">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 px-1 font-medium tab-active">แดชบอร์ด</button>
+        <button onclick="switchTab('cars')" id="tab-cars" class="py-3 px-1 font-medium text-gray-500 hover:text-gray-700">จัดการรถ</button>
+        <button onclick="switchTab('bookings')" id="tab-bookings" class="py-3 px-1 font-medium text-gray-500 hover:text-gray-700">รายการจอง</button>
+        <button onclick="switchTab('settings')" id="tab-settings" class="py-3 px-1 font-medium text-gray-500 hover:text-gray-700">ตั้งค่าเว็บ</button>
+      </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+      <!-- Dashboard -->
+      <div id="panel-dashboard" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <p class="text-sm text-gray-500">จำนวนรถทั้งหมด</p>
+            <p class="text-3xl font-bold text-gray-800" id="stat-cars">0</p>
+          </div>
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <p class="text-sm text-gray-500">การจองทั้งหมด</p>
+            <p class="text-3xl font-bold text-gray-800" id="stat-bookings">0</p>
+          </div>
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <p class="text-sm text-gray-500">รอดำเนินการ</p>
+            <p class="text-3xl font-bold text-orange-500" id="stat-pending">0</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-5 shadow-sm">
+          <h3 class="font-semibold mb-4">การจองล่าสุด</h3>
+          <div id="recent-bookings" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- Cars -->
+      <div id="panel-cars" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">จัดการรถ</h2>
+          <button onclick="openCarForm()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm">+ เพิ่มรถใหม่</button>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-gray-50 text-left text-sm text-gray-500">
+              <tr>
+                <th class="px-4 py-3">รูป</th>
+                <th class="px-4 py-3">ชื่อรถ</th>
+                <th class="px-4 py-3">ประเภท</th>
+                <th class="px-4 py-3">ราคา/วัน</th>
+                <th class="px-4 py-3">สถานะ</th>
+                <th class="px-4 py-3">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="cars-table" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bookings -->
+      <div id="panel-bookings" class="hidden">
+        <h2 class="text-xl font-bold mb-4">รายการจอง</h2>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-left text-gray-500">
+              <tr>
+                <th class="px-4 py-3">ลูกค้า</th>
+                <th class="px-4 py-3">รถ</th>
+                <th class="px-4 py-3">วันที่</th>
+                <th class="px-4 py-3">สถานะ</th>
+                <th class="px-4 py-3">แจ้งเตือน</th>
+                <th class="px-4 py-3">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-table" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div id="panel-settings" class="hidden">
+        <h2 class="text-xl font-bold mb-4">ตั้งค่าเว็บไซต์</h2>
+        <form onsubmit="saveSettings(event)" class="bg-white rounded-xl p-6 shadow-sm max-w-2xl">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">ชื่อบริษัท/ร้าน</label>
+              <input type="text" id="set-company" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">สโลแกน</label>
+              <input type="text" id="set-slogan" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1">เกี่ยวกับเรา</label>
+              <textarea id="set-about" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">สีหลัก</label>
+              <input type="color" id="set-primary" class="w-full h-10 border rounded-lg">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">สีรอง</label>
+              <input type="color" id="set-secondary" class="w-full h-10 border rounded-lg">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">เบอร์ WhatsApp เจ้าของ</label>
+              <input type="text" id="set-whatsapp" placeholder="0812345678" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">LINE ID เจ้าของ</label>
+              <input type="text" id="set-line" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">เบอร์โทรติดต่อ</label>
+              <input type="text" id="set-phone" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">อีเมล</label>
+              <input type="email" id="set-email" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1">URL โลโก้</label>
+              <input type="url" id="set-logo" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">รหัสผ่านแอดมินใหม่</label>
+              <input type="password" id="set-password" placeholder="ปล่อยว่างถ้าไม่เปลี่ยน" class="w-full border rounded-lg px-3 py-2">
+            </div>
+          </div>
+          <button type="submit" class="mt-6 btn-primary text-white px-6 py-2.5 rounded-lg font-medium">บันทึกการตั้งค่า</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- Car Form Modal -->
+  <div id="car-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold" id="car-modal-title">เพิ่มรถใหม่</h3>
+        <button onclick="closeCarForm()" class="text-2xl text-gray-400">&times;</button>
+      </div>
+      <form id="car-form" onsubmit="saveCar(event)">
+        <input type="hidden" id="car-edit-id">
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">ชื่อรถ</label>
+            <input type="text" id="car-name" required class="w-full border rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">ประเภท</label>
+            <select id="car-type" class="w-full border rounded-lg px-3 py-2">
+              <option value="ซีดาน">ซีดาน</option>
+              <option value="SUV">SUV</option>
+              <option value="กระบะ">กระบะ</option>
+              <option value="แวน">แวน</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium mb-1">ราคา/วัน (บาท)</label>
+              <input type="number" id="car-price" required min="0" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">จำนวนที่นั่ง</label>
+              <input type="number" id="car-seats" required min="1" value="5" class="w-full border rounded-lg px-3 py-2">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">URL รูปภาพ</label>
+            <input type="url" id="car-image" required class="w-full border rounded-lg px-3 py-2" placeholder="https://...">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">รายละเอียด</label>
+            <textarea id="car-desc" rows="2" class="w-full border rounded-lg px-3 py-2"></textarea>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="car-available" checked class="w-4 h-4">
+            <label class="text-sm">พร้อมให้เช่า</label>
+          </div>
+        </div>
+        <button type="submit" class="mt-4 w-full btn-primary text-white py-2.5 rounded-lg font-medium">บันทึก</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const defaultSettings = {
+      companyName: "เช่ารถอุดรธานี",
+      slogan: "บริการเช่ารถคุณภาพ ราคาเป็นมิตร",
+      about: "เรามีรถให้เลือกหลากหลายรุ่น สะอาด ปลอดภัย พร้อมบริการตลอด 24 ชั่วโมง",
+      primaryColor: "#3b82f6",
+      secondaryColor: "#0ea5e9",
+      ownerWhatsApp: "0812345678",
+      ownerLine: "owner_line_id",
+      logoUrl: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=200&h=200&fit=crop",
+      contactPhone: "042-123-456",
+      contactEmail: "info@carrental.com"
+    };
+
+    let settings = JSON.parse(localStorage.getItem('settings')) || defaultSettings;
+    let cars = JSON.parse(localStorage.getItem('cars')) || [];
+    let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+    let adminPassword = localStorage.getItem('adminPassword') || 'admin123';
+
+    function saveData() {
+      localStorage.setItem('settings', JSON.stringify(settings));
+      localStorage.setItem('cars', JSON.stringify(cars));
+      localStorage.setItem('bookings', JSON.stringify(bookings));
+    }
+
+    function applyTheme() {
+      document.documentElement.style.setProperty('--primary', settings.primaryColor);
+    }
+
+    function login(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('admin-password').value;
+      if (pwd === adminPassword) {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('admin-app').classList.remove('hidden');
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        initAdmin();
+      } else {
+        alert('รหัสผ่านไม่ถูกต้อง');
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('adminLoggedIn');
+      location.reload();
+    }
+
+    function initAdmin() {
+      applyTheme();
+      updateDashboard();
+      renderCars();
+      renderBookings();
+      loadSettingsForm();
+    }
+
+    function switchTab(tab) {
+      ['dashboard', 'cars', 'bookings', 'settings'].forEach(t => {
+        document.getElementById('panel-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('tab-active');
+        document.getElementById('tab-' + t).classList.add('text-gray-500');
+      });
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).classList.add('tab-active');
+      document.getElementById('tab-' + tab).classList.remove('text-gray-500');
+    }
+
+    function updateDashboard() {
+      document.getElementById('stat-cars').textContent = cars.length;
+      document.getElementById('stat-bookings').textContent = bookings.length;
+      document.getElementById('stat-pending').textContent = bookings.filter(b => b.status === 'pending').length;
+
+      const recent = bookings.slice(-5).reverse();
+      document.getElementById('recent-bookings').innerHTML = recent.length ? recent.map(b => {
+        const car = cars.find(c => c.id === b.carId) || { name: 'ไม่พบรถ' };
+        return `<div class="flex justify-between items-center py-2 border-b last:border-0">
+          <div>
+            <p class="font-medium">${b.name}</p>
+            <p class="text-sm text-gray-500">${car.name} • ${b.startDate} ถึง ${b.endDate}</p>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full ${b.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">${b.status === 'pending' ? 'รอดำเนินการ' : 'ยืนยันแล้ว'}</span>
+        </div>`;
+      }).join('') : '<p class="text-gray-400">ยังไม่มีการจอง</p>';
+    }
+
+    function renderCars() {
+      document.getElementById('cars-table').innerHTML = cars.map(car => `
+        <tr>
+          <td class="px-4 py-3"><img src="${car.image}" class="w-16 h-12 object-cover rounded"></td>
+          <td class="px-4 py-3 font-medium">${car.name}</td>
+          <td class="px-4 py-3">${car.type}</td>
+          <td class="px-4 py-3">${car.price.toLocaleString()}</td>
+          <td class="px-4 py-3">
+            <span class="text-xs px-2 py-1 rounded-full ${car.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+              ${car.available ? 'พร้อม' : 'ไม่ว่าง'}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <button onclick="editCar(${car.id})" class="text-blue-500 text-sm mr-2">แก้ไข</button>
+            <button onclick="deleteCar(${car.id})" class="text-red-500 text-sm">ลบ</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderBookings() {
+      document.getElementById('bookings-table').innerHTML = bookings.slice().reverse().map(b => {
+        const car = cars.find(c => c.id === b.carId) || { name: '-' };
+        const message = generateNotifyMessage(b, car);
+        const lineLink = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
+        const cleanPhone = (settings.ownerWhatsApp || '').replace(/[^0-9]/g, '');
+        const thaiPhone = cleanPhone.startsWith('0') ? '66' + cleanPhone.slice(1) : cleanPhone;
+        const waLink = `https://wa.me/${thaiPhone}?text=${encodeURIComponent(message)}`;
+        return `
+          <tr>
+            <td class="px-4 py-3">
+              <p class="font-medium">${b.name}</p>
+              <p class="text-xs text-gray-500">${b.phone}</p>
+            </td>
+            <td class="px-4 py-3">${car.name}</td>
+            <td class="px-4 py-3 text-xs">${b.startDate}<br>ถึง ${b.endDate}</td>
+            <td class="px-4 py-3">
+              <span class="text-xs px-2 py-1 rounded-full ${b.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">
+                ${b.status === 'pending' ? 'รอ' : 'ยืนยัน'}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <a href="${lineLink}" target="_blank" class="text-green-600 text-xs mr-2">LINE</a>
+              <a href="${waLink}" target="_blank" class="text-emerald-600 text-xs">WA</a>
+            </td>
+            <td class="px-4 py-3">
+              <button onclick="toggleBookingStatus(${b.id})" class="text-blue-500 text-xs mr-2">${b.status === 'pending' ? 'ยืนยัน' : 'รอ'}</button>
+              <button onclick="deleteBooking(${b.id})" class="text-red-500 text-xs">ลบ</button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">ยังไม่มีการจอง</td></tr>';
+    }
+
+    function generateNotifyMessage(booking, car) {
+      const start = new Date(booking.startDate);
+      const end = new Date(booking.endDate);
+      const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+      const total = days * (car.price || 0);
+      return `🚗 การจองเช่ารถใหม่!\n\nลูกค้า: ${booking.name}\nเบอร์โทร: ${booking.phone}\nรถ: ${car.name}\nวันที่รับ: ${booking.startDate}\nวันที่คืน: ${booking.endDate}\nจำนวนวัน: ${days} วัน\nราคารวม: ${total.toLocaleString('th-TH')} บาท\nหมายเหตุ: ${booking.note || '-'}`;
+    }
+
+    function openCarForm(id = null) {
+      document.getElementById('car-form').reset();
+      document.getElementById('car-edit-id').value = '';
+      document.getElementById('car-modal-title').textContent = 'เพิ่มรถใหม่';
+      document.getElementById('car-available').checked = true;
+      if (id) {
+        const car = cars.find(c => c.id === id);
+        if (car) {
+          document.getElementById('car-modal-title').textContent = 'แก้ไขรถ';
+          document.getElementById('car-edit-id').value = car.id;
+          document.getElementById('car-name').value = car.name;
+          document.getElementById('car-type').value = car.type;
+          document.getElementById('car-price').value = car.price;
+          document.getElementById('car-seats').value = car.seats;
+          document.getElementById('car-image').value = car.image;
+          document.getElementById('car-desc').value = car.description || '';
+          document.getElementById('car-available').checked = car.available;
+        }
+      }
+      document.getElementById('car-modal').classList.remove('hidden');
+      document.getElementById('car-modal').classList.add('flex');
+    }
+
+    function closeCarForm() {
+      document.getElementById('car-modal').classList.add('hidden');
+      document.getElementById('car-modal').classList.remove('flex');
+    }
+
+    function saveCar(e) {
+      e.preventDefault();
+      const editId = document.getElementById('car-edit-id').value;
+      const carData = {
+        name: document.getElementById('car-name').value,
+        type: document.getElementById('car-type').value,
+        price: parseInt(document.getElementById('car-price').value),
+        seats: parseInt(document.getElementById('car-seats').value),
+        image: document.getElementById('car-image').value,
+        description: document.getElementById('car-desc').value,
+        available: document.getElementById('car-available').checked
+      };
+      if (editId) {
+        const idx = cars.findIndex(c => c.id === parseInt(editId));
+        if (idx !== -1) cars[idx] = { ...cars[idx], ...carData };
+      } else {
+        carData.id = Date.now();
+        cars.push(carData);
+      }
+      saveData();
+      closeCarForm();
+      renderCars();
+      updateDashboard();
+    }
+
+    function editCar(id) { openCarForm(id); }
+
+    function deleteCar(id) {
+      if (confirm('ยืนยันการลบรถคันนี้?')) {
+        cars = cars.filter(c => c.id !== id);
+        saveData();
+        renderCars();
+        updateDashboard();
+      }
+    }
+
+    function toggleBookingStatus(id) {
+      const booking = bookings.find(b => b.id === id);
+      if (booking) {
+        booking.status = booking.status === 'pending' ? 'confirmed' : 'pending';
+        saveData();
+        renderBookings();
+        updateDashboard();
+      }
+    }
+
+    function deleteBooking(id) {
+      if (confirm('ยืนยันการลบรายการจอง?')) {
+        bookings = bookings.filter(b => b.id !== id);
+        saveData();
+        renderBookings();
+        updateDashboard();
+      }
+    }
+
+    function loadSettingsForm() {
+      document.getElementById('set-company').value = settings.companyName || '';
+      document.getElementById('set-slogan').value = settings.slogan || '';
+      document.getElementById('set-about').value = settings.about || '';
+      document.getElementById('set-primary').value = settings.primaryColor || '#3b82f6';
+      document.getElementById('set-secondary').value = settings.secondaryColor || '#0ea5e9';
+      document.getElementById('set-whatsapp').value = settings.ownerWhatsApp || '';
+      document.getElementById('set-line').value = settings.ownerLine || '';
+      document.getElementById('set-phone').value = settings.contactPhone || '';
+      document.getElementById('set-email').value = settings.contactEmail || '';
+      document.getElementById('set-logo').value = settings.logoUrl || '';
+    }
+
+    function saveSettings(e) {
+      e.preventDefault();
+      settings.companyName = document.getElementById('set-company').value;
+      settings.slogan = document.getElementById('set-slogan').value;
+      settings.about = document.getElementById('set-about').value;
+      settings.primaryColor = document.getElementById('set-primary').value;
+      settings.secondaryColor = document.getElementById('set-secondary').value;
+      settings.ownerWhatsApp = document.getElementById('set-whatsapp').value;
+      settings.ownerLine = document.getElementById('set-line').value;
+      settings.contactPhone = document.getElementById('set-phone').value;
+      settings.contactEmail = document.getElementById('set-email').value;
+      settings.logoUrl = document.getElementById('set-logo').value;
+
+      const newPwd = document.getElementById('set-password').value;
+      if (newPwd) {
+        adminPassword = newPwd;
+        localStorage.setItem('adminPassword', newPwd);
+      }
+
+      saveData();
+      applyTheme();
+      alert('บันทึกการตั้งค่าเรียบร้อยแล้ว! รีเฟรชหน้าหลักเพื่อดูการเปลี่ยนแปลง');
+    }
+
+    // Check login
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('admin-app').classList.remove('hidden');
+      initAdmin();
+    }
+  </script>
+</body>
+</html>
