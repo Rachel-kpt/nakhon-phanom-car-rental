@@ -1,0 +1,24 @@
+{
+  "name": "เช่ารถนครพนม",
+  "short_name": "เช่ารถนครพนม",
+  "description": "ระบบจองเช่ารถท่องเที่ยวนครพนม",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=192&h=192&fit=crop",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=512&h=512&fit=crop",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
